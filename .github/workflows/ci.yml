@@ -1,0 +1,37 @@
+name: ci
+
+# The same three commands the README tells you to run, on a clean runner with
+# no secrets: Preflight + install, typecheck, one pass of the agent.
+#
+# `npm start` reaches the network (a public Base RPC and satohub.ai for the
+# quote), so a red run can mean a public endpoint was down, not that the code
+# broke. Nothing here holds a key or signs anything; there is nothing to sign.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Runs of the template repo itself identify as Sato Hub's own CI. A repo
+      # made from the template gets its own name here; change it to yours.
+      SATO_USER_AGENT: ${{ github.repository == 'satohubai/base-agent-starter' && 'SatoHub-starter-ci/1.0' || 'base-agent-starter-ci/0.1' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Preflight, then install
+        run: npm run setup
+      - name: Typecheck
+        run: npm run typecheck
+      - name: One pass of the agent
+        run: npm start
